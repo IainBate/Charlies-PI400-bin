@@ -1,0 +1,16 @@
+find . -name "*.mp4" -type f | while read FILE;
+do 
+	ffmpeg -i "$FILE" </dev/null 2>/tmp/ffmpeg_output
+	if grep -q "Sample size" /tmp/ffmpeg_output; then
+		echo "Faulty file is:" "$FILE"
+	else
+#		echo "Healthy file is:" "$FILE"
+		grep -v "\-\-enable\-libmp3lame" /tmp/ffmpeg_output >/tmp/ffmpeg_output1
+		if grep -q "mp3lame" /tmp/ffmpeg_output1; then
+			echo "File converted" "$FILE"
+		else
+			echo "File needs converting still" "$FILE"
+		fi
+	fi
+done
+

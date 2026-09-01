@@ -1,0 +1,23 @@
+find /mnt/HDD/films/Greys\ Anatomy -name "*.mp4" -type f | while read FILE;
+do
+	genre=`ffmpeg -i "$FILE" 2>&1 |grep genre|awk '{ print $3 }'`
+	match="False"
+	FILE_basename=`basename "$FILE"`
+	find /mnt/HDD/iTunes/iTunes\ Media/Home\ Videos -name "$FILE_basename" -type f | while read FILE1
+	do
+		FILE1_basename=`basename "$FILE1"`
+		if [[ "$FILE_basename" == "$FILE1_basename" ]]; then
+			echo "Possible match for" "$FILE" "with" "$FILE1"
+			genre1=`ffmpeg -i "$FILE1" 2>&1 |grep genre|awk '{ print $3 }'`
+			echo "Genres are" $genre $genre1
+			if [[ "$genre" == "$genre1" ]]; then
+				match="True"
+				echo "The following file is found" $FILE
+			fi
+		fi
+	done
+	if [[ $match == "False" ]]; then
+		echo "The following file is not found" $FILE
+	fi
+done
+

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sudo mount /mnt/HDD_original_backup
+sudo bindfs -o nonempty,perms=777,mirror=pi --map=99/pi:@99/@pi /mnt/HDD_original_backup /mnt/HDD_backup

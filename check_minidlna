@@ -1,0 +1,9 @@
+
+TEST=`grep "signal 15" /var/log/minidlna/minidlna.log|wc -l`
+echo $TEST
+if [ $TEST -ne 0 ]; then
+	echo "Restarting minidlna"
+	service minidlna stop
+	[ -f "/var/log/minidlna/minidlna.log" ] && rm "/var/log/minidlna/minidlna.log"
+	service minidlna restart
+fi

@@ -1,0 +1,10 @@
+filename=$1
+genre=$2
+mkdir -p /mnt/HDD/films/"$genre"
+ffmpeg -i "$filename" -metadata genre="$genre" -c copy /mnt/HDD/films/"$genre"/"$filename"
+rm "$filename"
+# pushd /mnt/HDD/iTunes/iTunes\ Media/Automatically\ Add\ to\ TV.localized/
+# ffmpeg -i "$filename" -metadata genre="$genre" -c copy tmp.mp4
+# mv tmp.mp4 "$filename"
+# popd
+

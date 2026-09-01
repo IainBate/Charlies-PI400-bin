@@ -1,0 +1,2 @@
+find . -name "*_HD.mp4" -type f | while read film; do film1=`echo "$film" | sed -e 's/_HD//g'`; genre=`ffmpeg -i "$film" 2>&1 |grep genre|cut -d" " -f17-`; echo "genre is" $genre; mv -v "$film" /mnt/HDD/films/"$genre"/"$film1"; done
+find . -name "*_iPad.mp4" -type f | while read film; do film1=`echo "$film" | sed -e 's/_iPad//g'`; film2=`basename "$film1"`; mv -v "$film" /mnt/HDD/iTunes/iTunes\ Media/Automatically\ Add\ to\ TV.localized/"$film2"; done

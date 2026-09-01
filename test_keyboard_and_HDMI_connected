@@ -1,0 +1,23 @@
+if lsusb -v 2>/dev/null | grep -qi Keyboard; then
+	echo "Keyboard connected"
+	KEYBOARD="True"
+else
+	echo "Keyboard not connected"
+	KEYBOARD="False"
+fi 
+
+# Get the current video output type and strip away the unimportant bits
+video="$(tvservice -s | sed "s/^.*\[\([^ ]*\) .*$/\1/" )"
+
+# Check to see if it is HDMI and notify admin if it isn't
+if [ "$video" != "HDMI" ]; then
+    	echo "Not running HDMI"
+	HDMI="False"
+else
+    	echo "Running HDMI"
+	HDMI="True"
+fi
+
+if  [[ "$KEYBOARD" == *"False"* && "$HDMI" == *"True"* ]]; then
+	shutdown now
+fi

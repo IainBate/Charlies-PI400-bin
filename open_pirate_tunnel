@@ -1,0 +1,2 @@
+# The proxy for firefox should be set to manual with parameters SOCKS_HOST localhost and port 9999
+ssh -D 9999 ijb500@csresearch1.york.ac.uk

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+if [[ $(find /mnt/HDD/PI\ backup/ -name "sd_card_backup.img" -mtime +30 -print) ]]; then
+	echo "Backing up PI image"
+	LXTERMINAL=`ps -ef|grep lxterminal|grep -v "grep"|awk '{print $2}'`
+	if [ -n "$LXTERMINAL" ]; then kill -9 $LXTERMINAL; fi
+	sleep 10
+
+	udisksctl mount -b /dev/sda1
+	sleep 10
+
+	echo "Checking the hard drives"
+	/home/pi/bin/check_hard_drives
+
+	udisksctl mount -b /dev/sda1
+	sleep 10
+
+	echo "MOUNT AND BINDFS (ACCORDING TO ~/bin/mount_backup_drive BEFORE RUNNING THIS SCRIPT FOR RSYNC TO WORK"
+	sudo dd bs=1M if=/dev/mmcblk0p2 of=/mnt/HDD/PI\ backup/sd_card_backup.img
+	sudo rsync --archive --delete --times --verbose /etc/ /mnt/HDD/PI\ backup/etc/
+	sudo rsync --archive --delete --times --verbose /home/pi/bin/ /mnt/HDD/PI\ backup/bin/
+	sudo chown -R pi /mnt/HDD/PI\ backup
+	sudo chgrp -R pi /mnt/HDD/PI\ backup
+
+	sleep 10
+	udisksctl unmount -b /dev/sda1
+	sleep 10
+fi
+
+

@@ -1,0 +1,53 @@
+#!/bin/bash
+
+if [[ $(find /mnt/HDD/PI\ backup/ -name "sd_card_backup.img" -mtime +30 -print) ]]; then
+	echo "MOUNT AND BINDFS (ACCORDING TO ~/bin/mount_backup_drive BEFORE RUNNING THIS SCRIPT FOR RSYNC TO WORK"
+	sudo dd bs=1M if=/dev/mmcblk0p2 of=/mnt/HDD/PI\ backup/sd_card_backup.img
+	sudo rsync --archive --delete --times --verbose /etc/ /mnt/HDD/PI\ backup/etc/
+	sudo rsync --archive --delete --times --verbose /home/pi/bin/ /mnt/HDD/PI\ backup/bin/
+	sudo chown -R pi /mnt/HDD/PI\ backup
+	sudo chgrp -R pi /mnt/HDD/PI\ backup
+fi
+
+find /mnt/HDD/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
+	m=$(echo "$n"|sed 's/\/mnt\/HDD\///')
+	if [[ "$n" != *"to_file"* && "$m" != "films" && "$n" != *"tmp"* ]]; then
+		echo "rclone'ing" "$n" "$m"
+#		nice -n 20 rclone --delete-excluded --transfers 3 --checkers 3 --tpslimit 3 --drive-chunk-size 64M --fast-list --max-size 50G --verbose sync "$n" gdrv:Home/"$m"
+#        	nice -n 20 rclone --delete-excluded --low-level-retries 100 --transfers 3 --checkers 3 --tpslimit 3 --drive-chunk-size 64M --fast-list --verbose --log-file /tmp/rclone_"$m"_logfile sync "$n" gdrv:Home/"$m"
+               	nice -n 20 rclone --bwlimit 1M --delete-excluded --transfers 3 --checkers 3 --tpslimit 3 --drive-chunk-size 64M --fast-list --verbose --log-file /tmp/rclone_"$m"_logfile sync "$n" gdrv:Home/"$m"
+	fi
+done
+
+/home/pi/bin/mount_backup_drive
+find /mnt/HDD/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
+        m=$(echo "$n"|sed 's/\/mnt\/HDD\///')
+#	if mount|grep "HDD_original_backup" >/dev/null; then
+	if mount|grep "HDD_backup" >/dev/null; then
+                if [[ "$n" != *"films"* && "$n" != *"to_file"* && "$n" != *"raw_photos"* && "$n" != *"PI"* && "$n" != *"tmp"* ]]; then
+			echo "rsync'ing" "$n"
+	                if [[ "$n" != *"iTunes"* ]]; then
+				nice -n 20 rsync --archive --delete --times --delete-excluded --verbose "$n"/ /mnt/HDD_backup/"$m"/
+			else
+                                nice -n 20 rsync --archive --delete --times --delete-excluded --verbose --exclude "/iTunes Media/Home Videos" "$n"/ /mnt/HDD_backup/"$m"/
+			fi
+		fi
+	fi
+done
+
+sudo service minidlna stop
+sudo systemctl stop smbd
+sudo umount /mnt/HDD
+# sudo umount -l /mnt/HDD_original
+sudo fsck.ext4 -y /dev/sdb1
+sudo mount /mnt/HDD
+# sudo mount /mnt/HDD_original
+# sudo bindfs -o nonempty,perms=755,mirror=pi --map=99/pi:@99/@pi /mnt/HDD_original /mnt/HDD
+sudo service minidlna start
+sudo systemctl start smbd
+
+if mount|grep "HDD_backup" >/dev/null; then
+	sudo umount /mnt/HDD_backup
+#	sudo umount /mnt/HDD_original_backup
+fi
+sudo fsck.ext4 -y /dev/sda1

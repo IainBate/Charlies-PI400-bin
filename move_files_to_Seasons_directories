@@ -1,0 +1,4 @@
+for i in {1..9}; do mkdir -p "Season $i"; mv S0$i* "Season $i/"; done
+for i in {10..20}; do mkdir -p "Season $i"; mv S$i* "Season $i/"; done
+find . -empty -type d -delete
+

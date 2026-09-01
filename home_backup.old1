@@ -1,0 +1,19 @@
+#!/bin/bash
+
+udisksctl mount -b /dev/sdb1
+sleep 10
+
+echo "Backing up the HDD drive"
+find /mnt/HDD/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
+	m=$(echo "$n"|sed 's/\/mnt\/HDD\///')
+	if [[ "$n" != *"films"* ]]; then
+		echo "rsync'ing" "$n/" "/mnt/HDD_backup/$m/"
+		mkdir -p "/mnt/HDD_backup/$m/"
+		rsync --archive --delete --progress --delete-excluded "$n/" /mnt/HDD_backup/"$m"/
+	fi
+done
+
+sleep 10
+udisksctl unmount -b /dev/sdb1
+sleep 10
+

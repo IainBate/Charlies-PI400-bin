@@ -1,0 +1,16 @@
+#!/bin/bash
+
+find /mnt/HDD/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
+	m=$(echo "$n"|sed 's/\/mnt\/HDD\///')
+
+	echo "HDD Backup - rsync'ing" "$m" "with delete"
+	nice -n 20 rsync --archive --delete --times --delete-excluded --verbose --dry-run /mnt/HDD_backup/"$m"/ /mnt/HDD/"$m"/
+	echo "HDD Backup - rsync'ing" "$m" "without delete"
+	nice -n 20 rsync --archive --times --delete-excluded --verbose --dry-run /mnt/HDD_backup/"$m"/ /mnt/HDD/"$m"/
+
+	echo "Google Drive - rclone'ing" "$m" "with delete"
+	nice -n 20 rclone --delete-excluded --transfers 3 --checkers 3 --tpslimit 3 --drive-chunk-size 64M --fast-list --verbose --dry-run sync gdrv:Home/"$m" /mnt/HDD/"$m"
+	echo "Google Drive - rclone'ing" "$m" "without delete"
+	nice -n 20 rclone --delete-excluded --transfers 3 --checkers 3 --tpslimit 3 --drive-chunk-size 64M --fast-list --verbose --dry-run copy gdrv:Home/"$m" /mnt/HDD/"$m"
+done
+

@@ -1,0 +1,9 @@
+find /media/pi/MARVIN/ -name "*.m3*" -exec rm -vf {} \;
+
+rsync --progress -r --size-only --verbose --delete --delete-excluded --exclude "/Voice Memos" --exclude "/Automatically Add to TV.localized" --exclude "._*" --exclude "*.mp4" --exclude "/.iTunes Preferences.plist" --exclude .DS_Store --exclude *.JPG --exclude *.jpg --exclude Thumbs.db --exclude *.bmp --exclude *.nfo --exclude "/Automatically Add to iTunes" --exclude "Automatically Add to iTunes.localized" --exclude /Downloads --exclude *.sfv --exclude *.png --exclude *.wma --exclude *.m3u --exclude *.m3ue --exclude /Movies --exclude /iPad_movies --exclude "/Home Videos" --exclude "TV Shows" --exclude "/Mobile Applications" --exclude *.ipa "/mnt/HDD/iTunes/iTunes Media/" /media/pi/MARVIN/
+
+cd "/mnt/HDD/iTunes/iTunes Media/"
+for i in *.m3u; do sed -ie 's#/Volumes/share/iTunes/iTunes Media/##g' "$i"; done
+rm *.m3ue
+cp -pv *.m3u /media/pi/MARVIN/
+

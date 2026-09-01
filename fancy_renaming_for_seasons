@@ -1,0 +1,24 @@
+find . -type d |while read directory
+do 
+	new_directory=$(echo "$directory"|sed 's/The Big Bang Theory //')
+        echo "New directory is" "$new_directory"
+	mv -v "$directory" "$new_directory"
+done
+
+find . -type f |while read file
+do 
+	file1=`basename "$file"`
+	file2=$(echo "$file1"|sed 's/The Big Bang Theory //g')
+	directory=`dirname "$file"`
+	echo $directory
+	echo "$file1"; 
+#	season=$(echo "${file1}" | cut -c2-3)
+#	echo "$season"
+	episode=$(echo "${file2}" | cut -c5-6| awk '{sub(/^0*/,"");}1')
+#	echo "$episode"
+#	new_filename=`echo "Season" $season "- Episode" "$episode.${file##*.}"`
+        new_filename=`echo ${directory}"/Episode" "$episode.${file2##*.}"`
+	echo "New filename is" "$new_filename"
+	mv -v "$file" "$new_filename"
+done
+

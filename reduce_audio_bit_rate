@@ -1,0 +1,17 @@
+#!/bin/bash
+
+y=${1,,}
+echo "$y"
+ls -alh "$1"
+if [[ $y == *.mp3 || $y == *.m4a ]]; then       #  this is the snag
+	nice -n 20 ffmpeg -y -i "$1" -map 0:a:0 -b:a 160k tmp.mp3
+	touch -r "$1" tmp.mp3
+	filesize=$(stat -c%s "$1")
+        filesize1=$(stat -c%s tmp.mp3)
+	echo $filesize $filesize1
+	if (( filesize > filesize1 )); then
+ 		mv -v tmp.mp3 "$1"
+	fi
+fi
+ls -alh "$1"
+

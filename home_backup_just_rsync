@@ -1,0 +1,18 @@
+#!/bin/bash
+
+/home/pi/bin/mount_backup_drive
+find /mnt/HDD/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
+        m=$(echo "$n"|sed 's/\/mnt\/HDD\///')
+#	if mount|grep "HDD_original_backup" >/dev/null; then
+	if mount|grep "HDD_backup" >/dev/null; then
+                if [[ "$n" != *"films"* && "$n" != *"to_file"* && "$n" != *"raw_photos"* && "$n" != *"PI"* && "$n" != *"tmp"* ]]; then
+			echo "rsync'ing" "$n"
+	                if [[ "$n" != *"iTunes"* ]]; then
+				nice -n 20 rsync --archive --delete --times --delete-excluded --verbose "$n"/ /mnt/HDD_backup/"$m"/
+			else
+                                nice -n 20 rsync --archive --delete --times --delete-excluded --verbose --exclude "/iTunes Media/Home Videos" "$n"/ /mnt/HDD_backup/"$m"/
+			fi
+		fi
+	fi
+done
+

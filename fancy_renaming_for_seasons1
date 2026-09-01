@@ -1,0 +1,1 @@
+for file in *.mp4; do echo "$file"; m=$(echo "$file"|sed 's/Episode /S01E0/'); m1=$(echo "$m"|sed 's/010/10/'); m2=$(echo "$m1"|sed 's/011/11/'); m3=$(echo "$m2"|sed 's/012/12/'); m=$(echo "$m3"|sed 's/013/13/'); echo "$m"; mv -v "$file" "$m"; done

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# rsync --archive --delete --verbose /media/pi/5dfac697-4fc1-4a8a-b107-685814a6feef/films/ /mnt/HDD/films/
+
+find /mnt/HDD_backup/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
+	m=$(echo "$n"|sed 's/\/mnt\/HDD_backup\///')
+	if [[ "$m" != *"compiled"* && "$m" != "photos" && "$m" != "raw_photos"]]; then
+		echo "rsync'ing" "$n" "to /mnt/HDD/" "$m" "/"
+		nice -n 20 rsync --archive --delete --size-only --delete-excluded --verbose "$n"/ /mnt/HDD/"$m"/
+	else
+                echo "Skipping - rsync'ing" "$n" "to /mnt/HDD/" "$m" "/"
+	fi
+done

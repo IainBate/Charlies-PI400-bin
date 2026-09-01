@@ -1,0 +1,28 @@
+#!/bin/bash
+
+udisksctl mount -b /dev/disk/by-uuid/6829575a-6d8a-485e-9d28-0c3349037b18
+udisksctl mount -b /dev/disk/by-uuid/108877c8-994d-42b1-9be9-d93166281640
+sleep 10
+
+echo "Backing up home automation, bin, etc"
+rsync --archive --delete --progress /home/pi/home_automation/ /mnt/HDD/files/home_automation/
+rsync --archive --delete --progress /home/pi/ /mnt/HDD/files/usr/
+rsync --archive --delete --progress /home/pi/bin/ /mnt/HDD/files/bin/
+rsync --archive --delete --progress /etc/ /mnt/HDD/files/etc/
+
+echo "Backing up the HDD drive"
+find /mnt/HDD/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
+	m=$(echo "$n"|sed 's/\/mnt\/HDD\///')
+	if [[ "$n" != *"films"* ]]; then
+		echo "rsync'ing" "$n/" "/mnt/HDD_backup/$m/"
+		mkdir -p "/mnt/HDD_backup/$m/"
+		rsync --archive --delete --progress --delete-excluded "$n/" /mnt/HDD_backup/"$m"/
+	fi
+done
+rsync --archive --delete --progress /mnt/HDD_photos/photos/ /mnt/HDD_backup/photos/
+
+sleep 10
+udisksctl unmount -b /dev/disk/by-uuid/6829575a-6d8a-485e-9d28-0c3349037b18
+udisksctl unmount -b /dev/disk/by-uuid/108877c8-994d-42b1-9be9-d93166281640
+sleep 10
+

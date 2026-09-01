@@ -1,0 +1,2 @@
+find . -name "*_HD.mp4" -type f | while read film; do film1=`echo "$film" | sed -e 's/_HD//g'`; mv -v "$film" "$film1"; done
+find . -name "*_iPad.mp4" -type f | while read film; do film1=`echo "$film" | sed -e 's/_iPad//g'`; mv -v "$film" "$film1"; done

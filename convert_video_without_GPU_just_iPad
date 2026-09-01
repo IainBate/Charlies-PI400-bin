@@ -1,0 +1,35 @@
+filename=$1
+genre=`ffmpeg -i "$filename" 2>&1 |grep genre|awk '{ print $3 }'`
+if [ -z "$2" ]; then
+	echo "Input file's genre:" $genre
+else
+	genre=$2	
+        echo "Chosen genre:" $genre
+fi
+PID=$$
+
+echo "Original file name:" $filename
+filename1=`basename "$filename"`
+prefix=$(echo ${filename1%.*})
+echo "Prefix:" $prefix
+prefix1=$(echo ${filename%.*})
+echo "Prefix:" $prefix 
+echo "Prefix1:" $prefix1
+new_filename="${prefix1}.mp4"
+new_filename_HD="${prefix1}_HD.mp4"
+new_filename_iPad="${prefix1}_iPad.mp4"
+echo "New file names:" ${new_filename_iPad} ${new_filename_HD} ${new_filename}
+
+target_bitrate=2000
+ffmpeg -i "${filename}" 2>&1|grep Duration|grep bitrate
+bitrate=`ffmpeg -i "${filename}" 2>&1|grep Duration|grep bitrate|awk '{ print $6 }'`
+echo "bitrate is" $bitrate
+
+touch -r "$filename" .timestamp_$PID
+
+nice -n 20 ffmpeg -y -i "${filename}" -sn -map_chapters -1 -map_metadata -1 -map 0:v:0 -map 0:a:0 -metadata title="${prefix}" -metadata genre="$genre" -vf scale=1024:-2 -vcodec libx264 -b:v 900k -pix_fmt yuv420p -c:a copy -f mp4 tmp_$PID.mp4 </dev/null
+nice -n 20 ffmpeg -y -i tmp_$PID.mp4 -c:v copy -acodec libmp3lame -b:a 96k -filter:a loudnorm "${new_filename_iPad}" </dev/null
+touch -r .timestamp_$PID "${new_filename_iPad}"
+cp -a "${new_filename_iPad}" tmp_$PID.mp4
+mv tmp_$PID.mp4 /mnt/HDD/iTunes/iTunes\ Media/Automatically\ Add\ to\ TV.localized/"${new_filename}"
+rm .timestamp_$PID

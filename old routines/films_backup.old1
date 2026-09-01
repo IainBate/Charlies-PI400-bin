@@ -1,0 +1,2 @@
+rsync --archive --progress --delete --delete-excluded --exclude "*DS_Store*" --exclude /compiled_videos --exclude /photos --exclude /other_photos --exclude /files --exclude "/Go Pros" --exclude /lost+found --exclude /olympus_tg4 --exclude /iPhones --exclude "/.Trash*" /mnt/HDD/ /media/pi/Caravan/
+

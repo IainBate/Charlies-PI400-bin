@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if ! df | grep -q "HDD_backup"; then
+        sudo mount /mnt/HDD_backup
+fi
+
+# sudo mount /mnt/HDD_original_backup
+# sudo mount /mnt/HDD_backup
+# if $(df | grep -q /mnt/HDD_original_backup); then
+#	sudo bindfs -o nonempty,perms=755,mirror=pi --map=99/pi:@99/@pi /mnt/HDD_original_backup /mnt/HDD_backup
+# fi

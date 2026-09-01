@@ -1,0 +1,15 @@
+#!/bin/bash
+
+chown -R pi *
+chgrp -R pi *
+find "$1" -type d -exec chmod 755 {} \;
+find "$1" -type f -exec chmod 655 {} \;
+find "$1" -type f -executable \( -exec sh -c 'file -b "$1" | grep -q executable' Test {} \; -o -exec chmod a-x {} \; \)
+
+for file in `find "$1" -type f`
+do
+	if [ `head -1 $file` != "#!/bin/bash"] then;
+		echo $file
+		chmod u+x "$file"
+	fi
+done

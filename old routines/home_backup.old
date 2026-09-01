@@ -1,0 +1,8 @@
+rsync --archive --times /etc/ /mnt/HDD/etc/
+rsync --archive --times /home/pi/bin/ /mnt/HDD/bin/
+
+find /mnt/HDD/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
+	m=$(echo "$n"|sed 's/\/mnt\/HDD\///')
+	echo "$n" $m
+	nice -n 20 rclone --delete-excluded --transfers 3 --checkers 3 --tpslimit 3 --drive-chunk-size 64M --fast-list --max-size 16G --verbose sync "$n" gdrv:Home/"$m"
+done

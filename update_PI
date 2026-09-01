@@ -1,0 +1,21 @@
+#!/bin/bash
+echo
+echo "-> sudo apt-get update"
+sudo apt-get update
+echo
+echo "-> sudo apt-get -y full-upgrade"
+sudo apt-get -y full-upgrade
+echo
+echo "-> sudo apt-get -y dist-upgrade"
+sudo apt-get -y dist-upgrade
+echo
+echo "-> sudo apt-get -y autoremove"
+sudo apt-get -y autoremove
+echo
+echo "-> sudo apt-get clean"
+sudo apt-get clean
+echo
+# echo "-> sudo rpi-update"
+# sudo rpi-update
+sudo shutdown -r now
+

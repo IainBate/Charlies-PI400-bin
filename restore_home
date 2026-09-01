@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# rsync --archive --delete --verbose /media/pi/5dfac697-4fc1-4a8a-b107-685814a6feef/films/ /mnt/HDD/films/
+
+find /mnt/HDD_backup/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
+	m=$(echo "$n"|sed 's/\/mnt\/HDD_backup\///')
+	echo "rsync'ing" "$n" "to /mnt/HDD/" "$m" "/"
+	nice -n 20 rsync --archive --delete --size-only --delete-excluded --verbose "$n"/ /mnt/HDD/"$m"/
+done
+
+nice -n 20 rclone --size-only --delete-excluded --transfers 3 --checkers 3 --tpslimit 3 --drive-chunk-size 64M --fast-list --verbose sync gdrv:Home/films /mnt/HDD/films
+nice -n 20 rclone --size-only --delete-excluded --transfers 3 --checkers 3 --tpslimit 3 --drive-chunk-size 64M --fast-list --verbose sync gdrv:Home/to_file /mnt/HDD/to_file
+
+find /mnt/HDD/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
+	m=$(echo "$n"|sed 's/\/mnt\/HDD\///')
+	echo "$n" "$m"
+	echo "rclone'ing Google Drive" "$m" "to /mnt/HDD/" "$m" "/"
+	nice -n 20 rclone --size-only --delete-excluded --transfers 3 --checkers 3 --tpslimit 3 --drive-chunk-size 64M --fast-list --verbose sync gdrv:Home/"$m" /mnt/HDD/"$m"
+done

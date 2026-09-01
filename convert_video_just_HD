@@ -1,0 +1,36 @@
+filename=$1
+genre=`ffmpeg -i "$filename" 2>&1 |grep genre|awk '{ print $3 }'`
+if [ -z "$2" ]; then
+	echo "Input file's genre:" $genre
+else
+	genre=$2	
+        echo "Chosen genre:" $genre
+fi
+PID=$$
+
+echo "Original file name:" $filename
+filename1=`basename "$filename"`
+prefix=$(echo ${filename1%.*})
+echo "Prefix:" $prefix
+prefix1=$(echo ${filename%.*})
+echo "Prefix:" $prefix 
+echo "Prefix1:" $prefix1
+new_filename="${prefix1}.mp4"
+new_filename_HD="${prefix1}_HD.mp4"
+new_filename_iPad="${prefix1}_iPad.mp4"
+echo "New file names:" ${new_filename_iPad} ${new_filename_HD} ${new_filename}
+
+target_bitrate=2000
+ffmpeg -i "${filename}" 2>&1|grep Duration|grep bitrate
+bitrate=`ffmpeg -i "${filename}" 2>&1|grep Duration|grep bitrate|awk '{ print $6 }'`
+echo "bitrate is" $bitrate
+
+touch -r "$filename" .timestamp_$PID
+
+nice -n 20 ffmpeg -i "${filename}" -sn -map_chapters -1 -map_metadata -1 -map 0:v:0 -map 0:a:0 -metadata title="${prefix}" -metadata genre="$genre" -vcodec h264_v4l2m2m -b:v ${target_bitrate}k -pix_fmt yuv420p -acodec libmp3lame -b:a 128k -filter:a loudnorm -f mp4 tmp_$PID.mp4 </dev/null
+touch -r .timestamp_$PID tmp_$PID.mp4
+# cp -a tmp_$PID.mp4 "${new_filename_HD}"
+mkdir -p /mnt/HDD/films/"$genre"
+mv -v tmp_$PID.mp4 /mnt/HDD/films/"$genre"/"${new_filename}"
+
+rm -v .timestamp_$PID

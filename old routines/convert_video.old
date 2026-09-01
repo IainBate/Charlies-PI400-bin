@@ -1,0 +1,25 @@
+filename=$1
+genre=$2
+PID=$$
+
+echo "Original file name:" $filename
+filename1=`basename "$filename"`
+prefix=$(echo ${filename1%.*})
+echo "Prefix:" $prefix
+prefix1=$(echo ${filename%.*})
+echo "Prefix:" $prefix 
+echo "Prefix1:" $prefix1
+new_filename_HD="${prefix1}_HD.mp4"
+new_filename_iPad="${prefix1}_iPad.mp4"
+echo "New file names:" ${new_filename_iPad} ${new_filename_HD}
+
+nice -n 20 ffmpeg -i "${filename}" -sn -map_chapters -1 -map_metadata -1 -map 0:v:0 -map 0:a:0 -metadata title="${prefix}" -metadata genre="$genre" -vcodec libx264 -b:v 2000k -acodec libfdk_aac -b:a 128k -f mp4 tmp_$PID.mp4 </dev/null
+# nice -n 20 ffmpeg -i "${filename}" -sn -map_chapters -1 -map_metadata -1 -map 0:v:0 -map 0:a:0 -metadata title="${prefix}" -metadata genre="$genre" -vcodec libx264 -b:v 2000k -acodec aac -b:a 128k -f mp4 tmp_$PID.mp4 </dev/null
+mv tmp_$PID.mp4 "${new_filename_HD}"
+
+nice -n 20 ffmpeg -i "${filename}" -sn -map_chapters -1 -map_metadata -1 -map 0:v:0 -map 0:a:0 -metadata title="${prefix}" -metadata genre="$genre" -vf scale=1024:-2 -vcodec libx264 -b:v 900k -acodec libfdk_aac -b:a 96k -f mp4 tmp_$PID.mp4 </dev/null
+# nice -n 20 ffmpeg -i "${filename}" -sn -map_chapters -1 -map_metadata -1 -map 0:v:0 -map 0:a:0 -metadata title="${prefix}" -metadata genre="$genre" -vf scale=1024:-2 -vcodec libx264 -b:v 900k -acodec aac -b:a 96k -f mp4 tmp_$PID.mp4 </dev/null
+mv tmp_$PID.mp4 "${new_filename_iPad}"
+
+# rm "${filename}"
+

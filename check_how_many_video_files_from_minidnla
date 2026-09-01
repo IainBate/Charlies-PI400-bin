@@ -1,0 +1,22 @@
+echo "">/var/log/video_files_from_dlna
+VIDEO_FILES=0
+
+wget "http://localhost:8200/" -O /var/log/video_files_from_dlna >/dev/null 2>&1
+VIDEO_FILES=`awk -F'Video files</td><td>' '{print $2}' /var/log/video_files_from_dlna | sed -r 's/^([^.]+).*$/\1/; s/^[^0-9]*([0-9]+).*$/\1/'`
+
+if [ $VIDEO_FILES -ne 0 ]; then
+	echo "Number of video files is" $VIDEO_FILES>>/var/log/video_files_from_dlna.log
+else
+	echo "Restarting minidlna" $VIDEO_FILES>>/var/log/video_files_from_dlna.log
+	cat /var/log/video_files_from_dlna>>/var/log/video_files_from_dlna.log
+	sudo service minidlna restart
+	sleep 30
+	wget "http://localhost:8200/" -O /var/log/video_files_from_dlna >/dev/null 2>&1
+	VIDEO_FILES1=`awk -F'Video files</td><td>' '{print $2}' /var/log/video_files_from_dlna | sed -r 's/^([^.]+).*$/\1/; s/^[^0-9]*([0-9]+).*$/\1/'`
+	if [ $VIDEO_FILES1 -ne 0 ]; then
+		echo "Number of video files is" $VIDEO_FILES1>>/var/log/video_files_from_dlna.log
+	else
+		echo "Force reloading minidlna">>/var/log/video_files_from_dlna.log
+		sudo service minidlna force-reload
+	fi
+fi

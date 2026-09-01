@@ -1,0 +1,1 @@
+for film in *iPad.mp4; do film1=`echo "$film" | sed -e 's/_iPad//g'`; mv -v "$film" /mnt/HDD/iTunes/iTunes\ Media/Home\ Videos/"$film1"; done

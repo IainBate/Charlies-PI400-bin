@@ -1,0 +1,14 @@
+filename=$1
+new_filename=$(echo "$filename"|sed 's/ -/:/')
+film_name=$(echo "$new_filename"|sed 's/.mp4//')
+ffmpeg -i "$filename" -metadata title="$film_name" -c copy tmp.mp4
+mv tmp.mp4 "$new_filename"
+touch -r "$filename" "$new_filename"
+rm "$filename"
+
+# pushd /mnt/HDD/iTunes/iTunes\ Media/Automatically\ Add\ to\ TV.localized/
+# ffmpeg -i "$filename" -metadata title="$film_name" -c copy tmp.mp4
+# mv tmp.mp4 "$new_filename"
+# rm "$filename"
+# popd
+

@@ -1,0 +1,4 @@
+sudo rsync --archive --delete --progress --delete-excluded --exclude "._*" --exclude "*DS_Store*" --exclude "/Our Family" /mnt/HDD/films/  /media/pi/Lucy/films/ 
+# sudo chown -R minidlna /media/pi/Lucy
+# sudo chgrp -R minidlna /media/pi/Lucy
+

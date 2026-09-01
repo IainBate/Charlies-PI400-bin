@@ -1,0 +1,20 @@
+sudo rsync --archive --delete --progress --delete-excluded --exclude "._*" --exclude "*DS_Store*" /mnt/HDD/films/  /media/pi/Caravan/films/ 
+sudo chown -R minidlna /media/pi/Caravan 
+sudo chgrp -R minidlna /media/pi/Caravan 
+
+# find /mnt/HDD/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
+# 	m=$(echo "$n"|sed 's/\/mnt\/HDD\///')
+# 	if [[ "$n" != *"tmp"* && "$n" != *"compiled"* && "$n" != *"files"* && "$n" != *"Go Pros"* && "$n" != *"PI backup"* ]]; then
+# 		if [[ "$n" != *"lost"* && "$n" != *"other"* && "$n" != *"olympus_tg4"* && "$n" != *"iPhones"* && "$n" != *"Trash"* && "$n" != *"iTunes"* ]]; then
+# 			echo "rsync'ing" "$n/" "/media/pi/Caravan/$m/"
+# 			mkdir -p "/media/pi/Caravan/$m/"
+# 			rsync --archive --delete --progress --delete-excluded --exclude "._*" --exclude "*DS_Store*" "$n/" /media/pi/Caravan/"$m"/
+# 		fi
+# 	fi
+# done
+
+# rsync --archive --progress --delete --delete-excluded --exclude "*DS_Store*" 
+# --exclude /compiled_videos --exclude /photos --exclude /other_photos --exclude /files 
+# --exclude "/Go Pros" --exclude /lost+found --exclude /olympus_tg4 --exclude /iPhones 
+# --exclude "/.Trash*" /mnt/HDD/ /media/pi/Caravan/
+

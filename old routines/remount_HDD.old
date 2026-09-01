@@ -1,0 +1,10 @@
+sudo service minidlna stop
+sudo systemctl stop smbd
+sudo umount /mnt/HDD
+sudo umount -l /mnt/HDD_original
+
+sudo mount /mnt/HDD_original
+sudo bindfs -o nonempty,perms=755,mirror=pi --map=99/pi:@99/@pi /mnt/HDD_original /mnt/HDD
+sudo service minidlna start
+sudo systemctl start smbd
+

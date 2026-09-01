@@ -1,0 +1,10 @@
+# for file in *.mp4; do ls -alh "`find /mnt/HDD/films/ -mindepth 2 -name "$file" -type f -printf "%p"`" ; done
+find . -name "*.mp4" -type f | while read FILE;
+do 
+	touch -r "$FILE" .timestamp
+	ffmpeg -i "$FILE" -vcodec h264_v4l2m2m -pix_fmt yuv420p -b:v 900k -acodec libfdk_aac -b:a 96k -filter:a loudnorm -f mp4 temp.mp4 </dev/null
+	touch -r .timestamp temp.mp4
+	rm .timestamp
+	mv temp.mp4 "$FILE" 
+done
+

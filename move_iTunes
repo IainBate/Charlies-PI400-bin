@@ -1,0 +1,1 @@
+find . -name "*_iPad.mp4" -type f | while read film; do film1=`echo "$film" | sed -e 's/_iPad//g'`; film2=`basename "$film1"`; mv -v "$film" /mnt/HDD/iTunes/iTunes\ Media/Automatically\ Add\ to\ TV.localized/"$film2"; done

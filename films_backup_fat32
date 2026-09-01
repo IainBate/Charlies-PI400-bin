@@ -1,0 +1,3 @@
+rsync -r --size-only --verbose --delete --delete-excluded --max-size=4GB --exclude "*DS_Store*" --exclude /.minidlna --exclude *3D.* --exclude "/original 3D films" /mnt/HDD/films/ /media/pi/CARAVAN/
+
+

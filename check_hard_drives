@@ -1,0 +1,49 @@
+#!/bin/bash
+
+DELUGE=`ps -ef|grep deluge|grep -v "grep"|awk '{print $2}'`
+if [ -n "$DELUGE" ]; then kill -9 $DELUGE; fi
+sleep 10
+
+sudo service minidlna stop
+sudo systemctl stop smbd
+sleep 10
+
+if ! grep -q HDD /proc/mounts; then
+	sudo mount /mnt/HDD
+fi
+if ! grep -q HDD_backup /proc/mounts; then
+	sudo mount /mnt/HDD_backup
+fi
+
+HOME_HARD_DRIVE=`cat /proc/mounts |grep "HDD"|grep -v backup |grep "/dev/s"|awk '{print $1}'`
+BACKUP_DRIVE=`cat /proc/mounts |grep "HDD"|grep backup |grep "/dev/s"|awk '{print $1}'`
+echo "Home hard drive in /dev is" $HOME_HARD_DRIVE
+echo "Backup drive is" $BACKUP_DRIVE
+
+if $(df | grep -v backup| grep -q /mnt/HDD); then
+	sudo umount /mnt/HDD
+fi
+if $(df | grep backup| grep -q /mnt/HDD); then
+        sudo umount /mnt/HDD_backup
+	sleep 10
+	echo "CHECKING BACKUP HARD DRIVE"
+        sudo fsck.ext4 -y $BACKUP_DRIVE
+fi
+echo ""
+if ! grep -q HOME_HARD_DRIVE /proc/mounts; then
+	echo "CHECKING STANDARD HARD DRIVE"
+        sudo fsck.ext4 -y $HOME_HARD_DRIVE
+fi
+
+sleep 10
+echo ""
+sudo mount /mnt/HDD
+sleep 10
+# sudo bindfs -o nonempty,perms=755,mirror=pi --map=99/pi:@99/@pi /mnt/HDD_original /mnt/HDD
+sleep 10
+sudo service minidlna start
+sleep 10
+sudo systemctl start smbd
+sleep 10
+sudo service minidlna restart
+sleep 10

@@ -1,0 +1,1 @@
+ffmpeg -i "$1" -filter:v subtitles="$2" film_with_subtitles.mkv

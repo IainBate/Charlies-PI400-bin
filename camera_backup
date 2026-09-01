@@ -1,0 +1,21 @@
+DATE1=$(date +"%d_%m_%y")
+# sd_backup
+
+RAW_PHOTOS=/mnt/HDD/tmp/raw_photos/$DATE1/
+TMP_PHOTOS=/mnt/HDD/tmp/raw_photos/
+
+mkdir -p $RAW_PHOTOS
+rsync --rsh=ssh --archive --delete --delete-excluded --verbose --times --exclude /RECYCLER --exclude /.fseventsd --exclude /.Trashes --exclude "/._.Trashes" --exclude "/System Volume Information" /media/pi/4E27-79D0/DCIM/ $RAW_PHOTOS
+
+mkdir -p $TMP_PHOTOS/photos/
+mkdir -p $TMP_PHOTOS/videos/
+
+find $RAW_PHOTOS -name "*.JPG" -exec cp -av {} $TMP_PHOTOS/photos/ \;
+find $RAW_PHOTOS -name "*.MOV" -exec cp -av {} $TMP_PHOTOS/videos/ \;
+cp -a ~/bin/*olympus* $TMP_PHOTOS/videos/
+# rsync --rsh=ssh --archive --delete --verbose --times $TMP_PHOTOS/videos/ $TMP_PHOTOS/original_videos/
+
+cd $TMP_VIDEOS/videos
+python3 convert_olympus_videos.py .
+
+# rsync --rsh=ssh --archive --delete --verbose --times ijb@imolafoo://n/sebase/ijb/videos/*.mp4 /Volumes/Other/tmp/$DATE1/videos/ 

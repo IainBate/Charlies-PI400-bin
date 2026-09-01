@@ -1,0 +1,12 @@
+find . -mindepth 1 -type d|while read directory
+do	
+	echo "Directory is" "$directory"
+	mkdir /mnt/HDD/films/"Schitt's Creek"/"$directory"
+	cd /mnt/HDD/tmp/"Schitt's Creek"/"$directory"
+	find . -type f -name "*.m*"|while read file
+	do 
+		echo "File is" "$file"
+		../convert_video "$file" "Schitt's Creek" "$directory"
+	done
+done
+

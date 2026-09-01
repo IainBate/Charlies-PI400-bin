@@ -1,0 +1,20 @@
+# for file in *.mp4; do ls -alh "`find /mnt/HDD/films/ -mindepth 2 -name "$file" -type f -printf "%p"`" ; done
+rm -rf to_fix
+mkdir to_fix
+find . -name "*.mp4" -type f | while read FILE;
+do 
+	echo "File is:" "$FILE"
+	touch -r "$FILE" .timestamp
+	ffmpeg -i "$FILE" </dev/null 2>/tmp/ffmpeg_output
+	if cat /tmp/ffmpeg_output | grep -L "Sample size"; then
+		ffmpeg -y -i "$FILE" -c:v copy -pix_fmt yuv420p -acodec libmp3lame -b:a 128k -filter:a loudnorm -f mp4 temp.mp4 </dev/null
+	else
+		echo "Faulty file is:" "$FILE"
+		ffmpeg -y -i "$FILE" -pix_fmt yuv420p -c copy -f mp4 temp.mp4 </dev/null
+		cp -a "$FILE" to_fix/
+	fi
+	touch -r .timestamp temp.mp4
+	rm .timestamp
+	mv temp.mp4 "$FILE"
+done
+

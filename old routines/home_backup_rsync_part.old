@@ -1,0 +1,45 @@
+#!/bin/bash
+
+HOME_HARD_DRIVE=`cat /proc/mounts |grep "original "|grep "/dev/s"|awk '{print $1}'`
+echo "Home hard drive in /dev is" $HOME_HARD_DRIVE
+
+/home/pi/bin/mount_backup_drive
+find /mnt/HDD/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
+        m=$(echo "$n"|sed 's/\/mnt\/HDD\///')
+	if grep -q "$HOME_HARD_DRIVE" /proc/mounts; then	
+# 	if mount|grep "HDD_original_backup" >/dev/null; then
+                if [[ "$n" != *"films"* && "$n" != *"to_file"* && "$n" != *"raw_photos"* && "$n" != *"PI"* && "$n" != *"tmp"* ]]; then
+# 	               if [[ "$n" != *"compiled_videos"* || "$(/bin/date +\%d)" -le 7 ]]; then
+ 	               if [[ "$n" != *"compiled_videos"* ]]; then
+				echo "rsync'ing" "$n"
+	                	if [[ "$n" != *"iTunes"* ]]; then
+					nice -n 20 rsync --archive --delete --times --delete-excluded --verbose "$n"/ /mnt/HDD_backup/"$m"/
+				else
+                                	nice -n 20 rsync --archive --delete --times --delete-excluded --verbose --exclude "/iTunes Media/Home Videos" --exclude "/iTunes Media/Mobile Applications" "$n"/ /mnt/HDD_backup/"$m"/
+				fi
+			fi
+ 	               	if [[ $(/bin/date +\%d) -le 7 ]]; then
+ 	               		if [[ "$n" == *"compiled_videos"* ]]; then
+				echo "rsync'ing" "$n"
+					nice -n 20 rsync --archive --delete --times --delete-excluded --verbose "$n"/ /mnt/HDD_backup/"$m"/
+				fi	
+			fi
+		fi
+	fi
+done
+
+BACKUP_DRIVE1=`df -h|grep HDD_original_backup| grep dev| awk '{print $1}'`
+BACKUP_DRIVE=$(echo "${BACKUP_DRIVE1%?}")
+echo "Backup drive is" $BACKUP_DRIVE
+BACKUP_DRIVE2=`cat /proc/mounts |grep original_backup|grep "/dev/s"|awk '{print $1}'`
+echo "Backup drive in /dev is" $BACKUP_DRIVE2
+
+sudo umount /mnt/HDD_backup
+sudo umount /mnt/HDD_original_backup
+sudo udisksctl power-off -b $BACKUP_DRIVE
+sleep 10
+if grep -q "$BACKUP_DRIVE2" /proc/mounts; then
+	sudo umount /mnt/HDD_backup
+	sudo umount /mnt/HDD_original_backup
+	sudo udisksctl power-off -b $BACKUP_DRIVE
+fi

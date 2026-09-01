@@ -1,0 +1,12 @@
+#!/bin/bash
+
+find /mnt/HDD/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
+	m=$(echo "$n"|sed 's/\/mnt\/HDD\///')
+	if [[ "$n" != *"to_file"* && "$n" != *"tmp"* ]]; then
+		echo "rclone'ing" "$n" "$m"
+		RCLONE_VERBOSE=2		
+               	nice -n 20 rclone --bwlimit 1M --delete-excluded --transfers 3 --checkers 3 --tpslimit 3 --drive-chunk-size 64M --fast-list --verbose --log-file /tmp/rclone_"$m"_logfile sync "$n" gdrv:Home/"$m"
+#		nice -n 20 rclone --log-file /tmp/dedupe_"$m"_logfile dedupe --dedupe-mode newest gdrv:Home/"$m"/ 
+	fi
+done
+

@@ -1,0 +1,28 @@
+render_film () {
+	FILE1=$1
+	TIMESTAMP1=`mktemp --tmpdir=.`
+	TIMESTAMP=$TIMESTAMP1.$(date "+%H%M%S%N")
+	TEMPFILE1=`mktemp --tmpdir=.`
+	TEMPFILE=$TEMPFILE1.$(date "+%H%M%S%N")
+
+	echo "File is:" "$FILE1"
+        echo "TIMESTAMP File is:" "$TIMESTAMP"
+        echo "TEMPFILE File is:" "$TEMPFILE"
+
+        touch -r "$FILE1" "$TIMESTAMP"
+        ~/ffmpeg/ffmpeg -y -i "$FILE1" -c:v copy -pix_fmt yuv420p -acodec libmp3lame -b:a 128k -filter:a loudnorm -f mp4 "$TEMPFILE" </dev/null
+        touch -r "$TIMESTAMP" "$TEMPFILE"
+        rm "$TIMESTAMP" "$TIMESTAMP1" "$TEMPFILE1"
+        mv "$TEMPFILE" "$FILE1"                                                
+}
+
+rm -rf to_fix
+find . -name "*.mp4" -type f | while read FILE;
+do
+	render_film "$FILE" &
+	sleep 60
+done
+
+rclone --delete-excluded --low-level-retries 100 --transfers 3 --checkers 3 --tpslimit 3 --drive-chunk-size 64M --fast-list --verbose sync /scratch/staff/ijb500/films/ gdrv:Home/films/
+rclone --delete-excluded --low-level-retries 100 --transfers 3 --checkers 3 --tpslimit 3 --drive-chunk-size 64M --fast-list --verbose sync /scratch/staff/ijb500/films/ gdrv:Home/films/
+

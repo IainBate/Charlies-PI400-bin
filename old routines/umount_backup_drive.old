@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sudo umount /mnt/HDD_backup
+sudo umount /mnt/HDD_original_backup
