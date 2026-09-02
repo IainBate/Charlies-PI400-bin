@@ -389,10 +389,92 @@ echo "minidlna.conf written."
 echo ""
 
 # ---------------------------------------------------------------------------
-# STEP 11: restart/enable services, so everything reconfigured above is live
+# STEP 11: Caravan media drive mount + minidlna-media-check (added 2026-09-02,
+# missed by the original capture). The Caravan drive's ext4 UUID below is
+# specific to THIS physical drive - if this is a genuinely new/replacement
+# drive, find its real UUID with `sudo blkid` and substitute it here instead.
+#
+# minidlna-media-check.sh fixes a real recurring problem: after an unclean
+# unmount/remount (e.g. the caravan losing power mid-trip), files under
+# films/ can come back owned by someone other than minidlna, which silently
+# breaks DLNA serving. This is a oneshot, triggered automatically whenever
+# the mount unit activates (via the drop-in below's Wants=), NOT something
+# you `systemctl enable` directly - it has no [Install] section of its own.
+# ---------------------------------------------------------------------------
+echo "--- STEP 11: Caravan media drive mount + minidlna-media-check ---"
+CARAVAN_UUID="e2e2bddc-afad-404b-864e-fa3308db154c"
+if ! grep -q "$CARAVAN_UUID" /etc/fstab; then
+	echo "UUID=$CARAVAN_UUID /media/pi/Caravan ext4 defaults,auto,users,exec,rw,nofail 0 0" | sudo tee -a /etc/fstab > /dev/null
+	echo "Caravan drive fstab entry added."
+else
+	echo "Caravan drive fstab entry already present, skipping."
+fi
+
+sudo tee /usr/local/sbin/minidlna-media-check.sh > /dev/null <<'EOF'
+#!/bin/bash
+set -uo pipefail
+
+MEDIA_DIR=/media/pi/Caravan
+FILMS_DIR="$MEDIA_DIR/films"
+DB_FILE=/var/cache/minidlna/files.db
+LOG_TAG=minidlna-media-check
+ERR_FILE=$(mktemp)
+trap 'rm -f "$ERR_FILE"' EXIT
+
+log() { logger -t "$LOG_TAG" "$1"; }
+
+if ! mountpoint -q "$MEDIA_DIR"; then
+    log "media dir not mounted, skipping"
+    exit 0
+fi
+
+# Scoped to films/ (what minidlna actually serves) so a bad inode elsewhere
+# (e.g. lost+found after an unclean unmount) can't abort the whole check.
+BAD=$(find "$FILMS_DIR" -xdev \( -not -user minidlna -o -not -group minidlna \) -print -quit 2>"$ERR_FILE")
+
+if [ -s "$ERR_FILE" ]; then
+    log "find reported errors while scanning $FILMS_DIR (continuing anyway): $(tr '\n' ' ' < "$ERR_FILE")"
+fi
+
+if [ -n "$BAD" ]; then
+    log "ownership mismatch found (e.g. $BAD) - fixing ownership and forcing full rebuild"
+    chown -R minidlna:minidlna "$FILMS_DIR"
+    systemctl stop minidlna.service
+    rm -f "$DB_FILE"
+    systemctl start minidlna.service
+else
+    log "ownership OK - restarting minidlna so it can detect if the media dir changed"
+    systemctl restart minidlna.service
+fi
+EOF
+sudo chmod +x /usr/local/sbin/minidlna-media-check.sh
+
+sudo tee /etc/systemd/system/minidlna-media-check.service > /dev/null <<'EOF'
+[Unit]
+Description=Verify Caravan media ownership/permissions and (re)start minidlna
+After=media-pi-Caravan.mount
+Requires=media-pi-Caravan.mount
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/minidlna-media-check.sh
+EOF
+
+sudo mkdir -p /etc/systemd/system/media-pi-Caravan.mount.d
+sudo tee /etc/systemd/system/media-pi-Caravan.mount.d/override.conf > /dev/null <<'EOF'
+[Unit]
+Wants=minidlna-media-check.service
+EOF
+
+sudo systemctl daemon-reload
+echo "minidlna-media-check installed (script, service, mount drop-in)."
+echo ""
+
+# ---------------------------------------------------------------------------
+# STEP 12: restart/enable services, so everything reconfigured above is live
 # without needing a reboot, and comes back on its own after one.
 # ---------------------------------------------------------------------------
-echo "--- STEP 11: restart/enable services ---"
+echo "--- STEP 12: restart/enable services ---"
 sudo systemctl enable --now minidlna
 sudo systemctl enable --now deluged
 sudo systemctl enable --now deluge-web
@@ -402,7 +484,7 @@ echo "Services enabled and restarted."
 echo ""
 
 # ---------------------------------------------------------------------------
-# STEP 12: summary / what's left to do by hand
+# STEP 13: summary / what's left to do by hand
 # ---------------------------------------------------------------------------
 echo "=================================================================="
 echo " fresh_install.sh: done. Manual follow-ups, if not already done:"
@@ -420,6 +502,8 @@ echo "      reproduced here. Log into http://<pi-ip>:8112 (default deluge"
 echo "      password is 'deluge' on first run) and change it."
 echo "  [ ] Copy films back onto /media/pi/Caravan/films if this is a"
 echo "      genuinely new/replacement drive rather than the original"
-echo "      physically reattached one."
+echo "      physically reattached one (and update CARAVAN_UUID in STEP 11"
+echo "      above via 'sudo blkid' first if so)."
 echo "  [ ] spot-check: systemctl status minidlna deluged deluge-web"
+echo "      minidlna-media-check.service media-pi-Caravan.mount"
 echo "=================================================================="
