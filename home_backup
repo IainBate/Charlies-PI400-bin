@@ -1,28 +1,43 @@
 #!/bin/bash
+#
+# home_backup - back up PI400's own runtime secrets (SSH keys, deluge web
+# UI auth, NetworkManager WiFi profiles) onto the Caravan drive, so
+# fresh_install.sh has something to restore from if the SD card dies.
+#
+# This replaces an older version of this script that was a straight copy of
+# HomePI4's home_backup - it referenced /mnt/HDD, /mnt/HDD_backup,
+# /mnt/HDD_photos and ~/home_automation, none of which exist on this Pi, so
+# it silently did nothing useful here. This version targets the one drive
+# PI400 actually has: /media/pi/Caravan.
+#
+# Not currently scheduled by cron (see fresh_install.sh STEP 9) - run this
+# by hand occasionally (e.g. whenever you've changed WiFi networks or reset
+# the deluge password), or add it to a crontab.txt in this repo if you want
+# it automatic.
+#
+set -e
 
-udisksctl mount -b /dev/disk/by-uuid/6829575a-6d8a-485e-9d28-0c3349037b18
-udisksctl mount -b /dev/disk/by-uuid/108877c8-994d-42b1-9be9-d93166281640
-sleep 10
+BACKUP_DIR=/media/pi/Caravan/pi_config_backup
 
-echo "Backing up home automation, bin, etc"
-rsync --archive --delete --progress /home/pi/home_automation/ /mnt/HDD/files/home_automation/
-rsync --archive --delete --progress /home/pi/ /mnt/HDD/files/usr/
-rsync --archive --delete --progress /home/pi/bin/ /mnt/HDD/files/bin/
-rsync --archive --delete --progress /etc/ /mnt/HDD/files/etc/
+if ! mountpoint -q /media/pi/Caravan; then
+	echo "ERROR: /media/pi/Caravan is not mounted - nothing to back up onto."
+	exit 1
+fi
 
-echo "Backing up the HDD drive"
-find /mnt/HDD/ -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | while read n; do
-	m=$(echo "$n"|sed 's/\/mnt\/HDD\///')
-	if [[ "$n" != *"films"* ]]; then
-		echo "rsync'ing" "$n/" "/mnt/HDD_backup/$m/"
-		mkdir -p "/mnt/HDD_backup/$m/"
-		rsync --archive --delete --progress --delete-excluded "$n/" /mnt/HDD_backup/"$m"/
-	fi
-done
-rsync --archive --delete --progress /mnt/HDD_photos/photos/ /mnt/HDD_backup/photos/
+mkdir -p "$BACKUP_DIR"/ssh "$BACKUP_DIR"/deluge "$BACKUP_DIR"/network-manager
 
-sleep 10
-udisksctl unmount -b /dev/disk/by-uuid/6829575a-6d8a-485e-9d28-0c3349037b18
-udisksctl unmount -b /dev/disk/by-uuid/108877c8-994d-42b1-9be9-d93166281640
-sleep 10
+echo "Backing up ~/.ssh..."
+rsync --archive --delete /home/pi/.ssh/ "$BACKUP_DIR"/ssh/
 
+echo "Backing up deluge web UI auth..."
+if [ -f /home/pi/.config/deluge/auth ]; then
+	cp /home/pi/.config/deluge/auth "$BACKUP_DIR"/deluge/auth
+else
+	echo "No ~/.config/deluge/auth found, skipping."
+fi
+
+echo "Backing up NetworkManager WiFi profiles (needs sudo to read them)..."
+sudo rsync --archive --delete /etc/NetworkManager/system-connections/ "$BACKUP_DIR"/network-manager/
+sudo chown -R pi:pi "$BACKUP_DIR"/network-manager
+
+echo "Backup complete: $BACKUP_DIR"
